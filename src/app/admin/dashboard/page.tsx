@@ -26,26 +26,31 @@ export default function AdminDashboard() {
   }, [])
 
   const fetchData = async () => {
+    // Revenu mensuel via fonction SQL
     const { data: monthly } = await supabase.rpc('get_monthly_revenue')
     setMonthlyStats(monthly || [])
 
+    // Réservations par ville via fonction SQL
     const { data: byCity } = await supabase.rpc('get_reservations_by_city')
     setCityStats(byCity || [])
 
-    const { data: revenue } = await supabase
+    // Revenu total (compte des réservations)
+    const { count: revenueCount, error: revenueError } = await supabase
       .from('reservations')
       .select('total_price', { count: 'exact', head: true })
-    setTotalRevenue(revenue?.count || 0)
+    if (!revenueError) setTotalRevenue(revenueCount || 0)
 
-    const { data: apartments } = await supabase
+    // Nombre total d'appartements
+    const { count: apartmentsCount, error: apartmentsError } = await supabase
       .from('apartments')
       .select('*', { count: 'exact', head: true })
-    setTotalApartments(apartments?.count || 0)
+    if (!apartmentsError) setTotalApartments(apartmentsCount || 0)
 
-    const { data: reservations } = await supabase
+    // Nombre total de réservations
+    const { count: reservationsCount, error: reservationsError } = await supabase
       .from('reservations')
       .select('*', { count: 'exact', head: true })
-    setTotalReservations(reservations?.count || 0)
+    if (!reservationsError) setTotalReservations(reservationsCount || 0)
   }
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
@@ -57,56 +62,4 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-blue-50 p-6 rounded-lg">
           <h3 className="text-gray-500">Revenus totaux</h3>
-          <p className="text-3xl font-bold">{totalRevenue.toLocaleString()} DT</p>
-        </div>
-        <div className="bg-green-50 p-6 rounded-lg">
-          <h3 className="text-gray-500">Appartements</h3>
-          <p className="text-3xl font-bold">{totalApartments}</p>
-        </div>
-        <div className="bg-purple-50 p-6 rounded-lg">
-          <h3 className="text-gray-500">Réservations</h3>
-          <p className="text-3xl font-bold">{totalReservations}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-bold mb-4">Revenus mensuels</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyStats}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value) => [`${value} DT`, 'Revenus']} />
-              <Bar dataKey="total" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-bold mb-4">Réservations par ville</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={cityStats}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="count"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {cityStats.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value} réservations`, '']} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  )
-}
+          <p className="text-3xl font-bold">{totalRevenue.toLocaleS
