@@ -62,4 +62,31 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-blue-50 p-6 rounded-lg">
           <h3 className="text-gray-500">Revenus totaux</h3>
-          <p className="text-3xl font-bold">{totalRevenue.toLocaleS
+          <p className="text-3xl font-bold">{totalRevenue.toLocaleString()} €</p>
+        </div>
+        <div className="bg-green-50 p-6 rounded-lg">
+          <h3 className="text-gray-500">Appartements</h3>
+          <p className="text-3xl font-bold">{totalApartments}</p>
+        </div>
+        <div className="bg-yellow-50 p-6 rounded-lg">
+          <h3 className="text-gray-500">Réservations</h3>
+          <p className="text-3xl font-bold">{totalReservations}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Graphique barres revenus mensuels */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Revenus mensuels</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlyStats}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="total" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Gr*
