@@ -11,7 +11,7 @@ type Apartment = {
   price_per_night: number
   city: string
   bedrooms: number
-  photos: { url: string }[]
+  photos: { url: string; is_main: boolean }[]   // ✅ ajout de is_main
 }
 
 export default function SearchPage() {
@@ -41,19 +41,20 @@ export default function SearchPage() {
     if (parsedFilters.maxPrice) baseQuery = baseQuery.lte('price_per_night', parsedFilters.maxPrice)
     if (parsedFilters.bedrooms) baseQuery = baseQuery.eq('bedrooms', parsedFilters.bedrooms)
     if (parsedFilters.keywords?.length) {
-      const keywordFilter = parsedFilters.keywords.map(kw => 
-        baseQuery.or(`description.ilike.%${kw}%`)
-      )[0]
-      if (keywordFilter) baseQuery = keywordFilter
+      baseQuery = baseQuery.or(
+        parsedFilters.keywords.map(kw => `description.ilike.%${kw}%`).join(',')
+      )
     }
 
     const { data, error } = await baseQuery
 
     if (!error && data) {
-      setApartments(data.map(apartment => ({
-        ...apartment,
-        photos: Array.isArray(apartment.photos) ? apartment.photos : [],
-      })))
+      setApartments(
+        data.map(apartment => ({
+          ...apartment,
+          photos: Array.isArray(apartment.photos) ? apartment.photos : [],
+        }))
+      )
     } else {
       setApartments([])
     }
@@ -76,10 +77,12 @@ export default function SearchPage() {
         .eq('is_available', true)
         .then(({ data }) => {
           if (data) {
-            setApartments(data.map(apartment => ({
-              ...apartment,
-              photos: Array.isArray(apartment.photos) ? apartment.photos : [],
-            })))
+            setApartments(
+              data.map(apartment => ({
+                ...apartment,
+                photos: Array.isArray(apartment.photos) ? apartment.photos : [],
+              }))
+            )
           }
         })
     }
@@ -122,12 +125,23 @@ export default function SearchPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {apartments.map(apt => {
-            const mainPhoto = apt.photos.find(p => p.is_main)?.url || apt.photos[0]?.url
-            const photoUrl = mainPhoto ? supabase.storage.from('apartment_photos').getPublicUrl(mainPhoto).data.publicUrl : '/placeholder.jpg'
+            const mainPhoto =
+              apt.photos.find(p => p.is_main)?.url || apt.photos[0]?.url
+            const photoUrl = mainPhoto
+              ? supabase.storage.from('apartment_photos').getPublicUrl(mainPhoto).data.publicUrl
+              : '/placeholder.jpg'
 
             return (
-              <Link key={apt.id} href={`/apartment/${apt.id}`} className="border rounded-lg overflow-hidden hover:shadow-md transition">
-                <img src={photoUrl} alt={apt.title} className="w-full h-48 object-cover" />
+              <Link
+                key={apt.id}
+                href={`/apartment/${apt.id}`}
+                className="border rounded-lg overflow-hidden hover:shadow-md transition"
+              >
+                <img
+                  src={photoUrl}
+                  alt={apt.title}
+                  className="w-full h-48 object-cover"
+                />
                 <div className="p-4">
                   <h3 className="font-bold">{apt.title}</h3>
                   <p className="text-blue-600 font-bold">{apt.price_per_night} DT/nuit</p>
@@ -140,7 +154,9 @@ export default function SearchPage() {
       )}
 
       {apartments.length === 0 && !loading && (
-        <p className="text-center text-gray-500 mt-10">Aucun appartement ne correspond à votre recherche.</p>
+        <p className="text-center text-gray-500 mt-10">
+          Aucun appartement ne correspond à votre recherche.
+        </p>
       )}
     </div>
   )
